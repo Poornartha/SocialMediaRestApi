@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    SocialMedia | Home
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+        <div class="col-md-6 mx-auto col-12 text-center">
+            <form action="./api/create" id='posts-create-form' class="form-group" method="POST">
+                {% csrf_token %}
+                <div class="d-none alert alert-danger" id="form-error"></div>
+                <input type="hidden" value='/' name='next' />
+                <textarea required class="form-control" id='text-area' name="text" placeholder="Your Post!" cols="30" rows="10"></textarea>
+                <button type="submit" class="btn btn-light colorme mt-3">Post</button>
+            </form>
+        </div>
+    </div>
+
+    {% comment %} <h1 class="mb-5" style="text-align: center;">Posts</h1> {% endcomment %}
+    <div id="posts">
+        Loading...
+    </div>
+    {% comment %} <div id="root" class="col-12 offset-0 col-md-10 offset-md-1 text-center">
+        LOADING
+    </div> {% endcomment %}
+
+{% endblock %}
+
+{% block script %}
+
+    <script>
+    
+        {% comment %} fetch('http://127.0.0.1:8000/posts/')
+            .then(response => response.json())
+            .then(data => console.log(data)) {% endcomment %}
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }   
+            return cookieValue;
+        }
+
+        function handleAction(post_id, currentCount, action) {    
+            // console.log(post_id, currentCount)
+            const csrftoken = getCookie('csrftoken');
+            const url = '/posts/action'
+            const method = 'POST'
+            const data = JSON.stringify({
+                id: post_id,
+                action: action,
+            })
+            const xhr = new XMLHttpRequest()
+            xhr.open(method, url)
+            xhr.setRequestHeader("Content-Type", 'application/json')
+            xhr.setRequestHeader("HTTP_X_REQUESTED_WITH", 'XMLHttpRequest')
+            xhr.setRequestHeader("X-Requested-With", 'XMLHttpRequest')
+            xhr.setRequestHeader("X-CSRFToken", csrftoken)
+            xhr.onload = function () {
+                console.log(xhr.status, xhr.response)
+                loadPosts()
+            }
+            xhr.send(data)
+            return
+        }
+
+        function likeBtn(post) {
+            return `<button class="btn btn-light" style="background-color: #33d9b2; border-radius: 0.5em;" onClick=handleAction(${post.id},${post.likes},'like')>${post.likes} Like</button>`
+        }
+
+        function unlikeBtn(post) {
+            return `<button class="btn btn-outline-secondary ml-3" style="border-radius: 0.5em;" onClick=handleAction(${post.id},${post.likes},'unlike')>Unlike</button>`
+        }
+
+        function rePost(post) {
+            return `<button class="btn btn-outline-info ml-3" style="border-radius: 0.5em;" onClick=handleAction(${post.id},${post.likes},'repost')>Re-Post</button>`
+        }
+
+        const formatPosts = function(posts) {
+            let html = ''
+            posts.forEach(post => {
+                    html += `<div class="border p-5 m-5" style="border-radius: 2em;"> <h5> <span id=${post.id}> ${post.text} </span> </h5>` + 
+                    `<div class="btn-group"> ${likeBtn(post)}  ${unlikeBtn(post)} ${rePost(post)}</div> </div>` 
+            })
+            return html
+        }
+        
+        
+        const loadPosts = function () {
+            const xhr = new XMLHttpRequest()
+            const method = 'GET'
+            const url = '/posts/api'
+            const responseType = 'json'
+            xhr.responseType = responseType
+            xhr.open(method, url)
+            xhr.onload = function() {
+                const serverResponse = xhr.response
+                const posts = serverResponse
+                
+                // posts.forEach(post => {console.log(post)})
+                
+                document.getElementById('posts').innerHTML = formatPosts(posts)
+            }
+            xhr.send()
+        }
+
+        loadPosts()
+
+        function addPost(post) {
+            return `<div class="border p-5 m-5" style="border-radius: 2em;"> <h5> <span id=${post.id}> ${post.text} </span> </h5>` + 
+                    `<div class="btn-group"> ${likeBtn(post)} ${unlikeBtn(post)} ${rePost(post)} </div> </div>` 
+        }
+
+        function handleFormError (msg, display) {
+            var errDisplay = document.getElementById('form-error')
+            if (display === true){
+                errDisplay.setAttribute("class", "d-block alert alert-danger")
+                errDisplay.innerText = msg
+            } else {
+                errDisplay.setAttribute("class", "d-none alert alert-danger")
+            }
+        }
+
+        function handleFormCreation(event) {
+            event.preventDefault()
+            const myForm  = event.target
+            const formData = new FormData(myForm)
+            const endpoint = myForm.getAttribute('action')
+            const method = myForm.getAttribute('method')
+            const xhr = new XMLHttpRequest()
+            xhr.open(method, endpoint)
+            xhr.setRequestHeader("HTTP_X_REQUESTED_WITH", 'XMLHttpRequest')
+            xhr.setRequestHeader("X-Requested-With", 'XMLHttpRequest')
+            xhr.onload = function() {
+
+                if (xhr.status === 201) {
+                    const newPost = JSON.parse(xhr.response)
+                    document.getElementById('posts').innerHTML = addPost(newPost) + document.getElementById('posts').innerHTML
+                    myForm.reset()
+                } else if (xhr.status === 400) {
+                    const errorJson = JSON.parse(xhr.response)
+                    const contentErr = errorJson.text
+                    let contentErrMess = ''
+                    console.log(contentErr)
+                    if (contentErr) {
+                        contentErrMess = contentErr[0]
+                        if (contentErrMess) {
+                            handleFormError(contentErrMess, true)
+                            myForm.reset()
+                        } else {
+                            alert("Something's not right. Please try again.")
+                        }
+                    } else {
+                        alert("Something's not right. Please try again.")
+                    }
+                } else if (xhr.status === 500) {
+                    alert("There was a server error. Try agaian after sometime.")
+                } else if (xhr.status === 401 | xhr.status === 403) {
+                    alert("Please Log In to make a Post.")
+                    window.location.href = '/login'
+                } 
+                // loadPosts()
+            }
+            xhr.onerror = function() {
+                alert("Something's not right, please try again later.")
+            }
+            xhr.send(formData)
+        }
+
+        const posts = document.getElementById('posts-create-form')
+        posts.addEventListener('submit', handleFormCreation)
+        
+        
+
+    </script>
+
+{% endblock %}

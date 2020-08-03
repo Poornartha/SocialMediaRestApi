@@ -1,0 +1,60 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#000000"/>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    {% include 'react/css.html' %}
+    <style>
+        @media (max-width: 600px){
+            h1 {
+                font-size: 1.5em;
+            }
+        }
+
+        .colorme {
+            background: #33d9b2;
+        }
+
+        @media (min-width: 700px)
+        {
+
+          .post h5{
+            padding: 0.7em;
+          }
+        }
+  
+        .post {
+          text-align: center;
+          margin: 0.5em;
+          border-radius: 4em;
+        }
+    </style>
+    <title>{% block title %} {% endblock %}</title>
+  </head>
+  <body>
+
+    {% include 'components/_navbar.html' %}
+
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    
+    <div class="container">
+        {% block content %}
+
+        {% endblock %}
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    {% include 'react/base_embed.html' %}
+    {% include 'react/js.html' %}
+    {% block script %}
+    {% endblock %}
+  </body>
+</html>
