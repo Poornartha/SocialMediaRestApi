@@ -1,8 +1,7 @@
 
 **Backend Endpoints**
 
-1. '' : Fetching all the Posts
-2. 'create' : Creating a Post
-3. '<int:pk>/delete' : Delete a Post
-4. '<int:pk>' : Detailed View of a Post
-5. 
+REST API For Social Media Site with the following functionality:
+1. Create Posts
+2. Like Posts
+3. Repost a Post
